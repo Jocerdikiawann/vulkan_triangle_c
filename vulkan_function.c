@@ -1,5 +1,4 @@
 #include "vulkan_function.h"
-#include <GLFW/glfw3.h>
 
 VkInstance createInstance() {
   VkApplicationInfo appInfo = {

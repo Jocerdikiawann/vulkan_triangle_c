@@ -1,11 +1,5 @@
 #include "vulkan_function.h"
-#include <GLFW/glfw3.h>
-#include <stdint.h>
-#include <vulkan/vulkan_core.h>
-#define GLFW_INCLUDE_VULKAN
 #include "window.h"
-
-#include <vulkan/vulkan.h>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
