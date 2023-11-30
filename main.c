@@ -1,3 +1,6 @@
+#include "vulkan_function.h"
+#include <GLFW/glfw3.h>
+#include <stdint.h>
 #include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include "window.h"
@@ -7,17 +10,17 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-VkInstance createInstance();
-void initVulkan();
-void loop(GLFWwindow *window);
-
 int main() {
   glfwInit();
   GLFWwindow *window = createWindow(WIDTH, HEIGHT, "Triangle");
-  initVulkan();
+  VkInstance vkInstance = createInstance();
 
-  loop(window);
+  while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
+  }
+
   deleteWindow(window);
+  deleteVkInstance(&vkInstance);
 
   return 0;
   // mat4 matrix;
@@ -25,30 +28,4 @@ int main() {
 
   // vec4 result;
   // glm_mat4_mulv(matrix, vec, result);
-}
-
-VkInstance createInstance() {
-  VkApplicationInfo appInfo = {
-      VK_STRUCTURE_TYPE_APPLICATION_INFO,
-      VK_NULL_HANDLE,
-      "HELLO_TRIANGLE",
-      VK_MAKE_VERSION(1, 0, 0),
-      "No Engine",
-      VK_MAKE_VERSION(1, 0, 0),
-      VK_API_VERSION_1_0,
-  };
-  VkInstanceCreateInfo createInfo = {
-      VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-
-  };
-
-  return NULL;
-}
-
-void initVulkan() { createInstance(); }
-
-void loop(GLFWwindow *window) {
-  while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
-  }
 }
