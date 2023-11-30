@@ -1,6 +1,6 @@
 #include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "window.h"
 
 #include <vulkan/vulkan.h>
 
@@ -9,19 +9,15 @@ const uint32_t HEIGHT = 600;
 
 VkInstance createInstance();
 void initVulkan();
-GLFWwindow *createWindow();
 void loop(GLFWwindow *window);
-void cleanup(GLFWwindow *window);
 
 int main() {
   glfwInit();
-
-  GLFWwindow *window = createWindow();
-
+  GLFWwindow *window = createWindow(WIDTH, HEIGHT, "Triangle");
   initVulkan();
 
   loop(window);
-  cleanup(window);
+  deleteWindow(window);
 
   return 0;
   // mat4 matrix;
@@ -51,19 +47,8 @@ VkInstance createInstance() {
 
 void initVulkan() { createInstance(); }
 
-GLFWwindow *createWindow() {
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-  return glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", NULL, NULL);
-}
-
 void loop(GLFWwindow *window) {
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
   }
-}
-
-void cleanup(GLFWwindow *window) {
-  glfwDestroyWindow(window);
-  glfwTerminate();
 }
