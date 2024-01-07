@@ -34,6 +34,9 @@ VkInstance createInstance() {
 
   const char **requiredExtension =
       malloc((glfwExtensionsCount + 1) * sizeof(char *));
+  if (requiredExtension == NULL) {
+    exit(EXIT_FAILURE);
+  }
 
   for (uint32_t i = 0; i < glfwExtensionsCount; i++) {
     requiredExtension[i] = glfwExtensions[i];
@@ -47,13 +50,36 @@ VkInstance createInstance() {
   createInfo.ppEnabledLayerNames = requiredExtension;
 
   if (vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance) != VK_SUCCESS) {
-    fprintf(stderr, "failed to create instance\n");
+    PANIC("ERROR:", stderr);
+    deleteRequiredExtension(requiredExtension);
     exit(EXIT_FAILURE);
   }
 
-  free(requiredExtension);
+  uint32_t extensionCount = 0;
+
+  VkExtensionProperties *extensions = (VkExtensionProperties *)malloc(
+      extensionCount * sizeof(VkExtensionProperties));
+
+  if (extensions == NULL) {
+    exit(EXIT_FAILURE);
+  }
+
+  vkEnumerateInstanceExtensionProperties(VK_NULL_HANDLE, &extensionCount,
+                                         extensions);
+
+  for (uint32_t i = 0; i < extensionCount; i++) {
+    printf("\t%s\n", extensions[i].extensionName);
+  }
 
   return instance;
+}
+
+void deleteRequiredExtension(const char **requiredExtension) {
+  free(requiredExtension);
+}
+
+void deleteVkExtensionProperties(VkExtensionProperties *properties) {
+  free(properties);
 }
 
 void deleteVkInstance(VkInstance *vkInstance) {
