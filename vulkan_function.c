@@ -1,8 +1,4 @@
 #include "vulkan_function.h"
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 VkInstance createInstance() {
   VkApplicationInfo appInfo = {
@@ -99,6 +95,14 @@ struct QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
 
 VkDevice createDevice() { return NULL; }
 VkQueue createGrapichsQueue() { return NULL; }
+VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window) {
+  VkSurfaceKHR surface;
+  if (glfwCreateWindowSurface(instance, window, VK_NULL_HANDLE, &surface) !=
+      VK_SUCCESS) {
+    PANIC("failed to create window surface");
+  }
+  return surface;
+}
 
 void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device) {
   VkQueue graphicQueue;
@@ -164,4 +168,8 @@ void deleteVkInstance(VkInstance *vkInstance) {
 
 void deleteDevice(VkDevice *device) {
   vkDestroyDevice(*device, VK_NULL_HANDLE);
+}
+
+void destroySurface(VkInstance instance, VkSurfaceKHR surface) {
+  vkDestroySurfaceKHR(instance, surface, VK_NULL_HANDLE);
 }

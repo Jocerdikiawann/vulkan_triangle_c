@@ -2,6 +2,9 @@
 #define VULKAN_FUNCTION_H
 
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
@@ -26,6 +29,8 @@ struct QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device);
 VkDevice createDevice();
 VkQueue createGraphicsQueue();
+VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window);
 void deleteDevice(VkDevice *device);
+void destroySurface(VkInstance instance, VkSurfaceKHR surface);
 
 #endif // !VULKAN_FUNCTION_H
