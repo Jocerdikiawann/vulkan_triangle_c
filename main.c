@@ -8,6 +8,11 @@ int main() {
   glfwInit();
   GLFWwindow *window = createWindow(WIDTH, HEIGHT, "Triangle");
   VkInstance vkInstance = createInstance();
+  VkSurfaceKHR surface = createSurface(vkInstance, window);
+  pickPhysicalDevices(vkInstance);
+  VkDevice device = createDevice();
+  VKPhysicalDevice physicalDevice = createPhysicalDevice();
+  createLogicalDevice(physicalDevice, device, surface);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
