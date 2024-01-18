@@ -32,6 +32,7 @@ typedef struct QueueFamilyIndices {
 } QueueFamilyIndices;
 
 bool isDeviceSuitable(VkPhysicalDevice device);
+int rateDeviceSuitability(VkPhysicalDevice device);
 
 VkInstance createInstance();
 

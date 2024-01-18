@@ -184,6 +184,8 @@ bool checkValidationLayerSupport() {
     }
 
     if (!layerFound) {
+      free(availableLayers);
+      availableLayers = NULL;
       return false;
     }
   }
@@ -265,7 +267,18 @@ void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device,
   vkGetDeviceQueue(device, indices.graphicFamily, 0, &graphicQueue);
 }
 
+bool isDeviceSuitable(VkPhysicalDevice device) {
+  VkPhysicalDeviceProperties deviceProperties;
+  VkPhysicalDeviceFeatures deviceFeature;
+  vkGetPhysicalDeviceProperties(device, &deviceProperties);
+  vkGetPhysicalDeviceFeatures(device, &deviceFeature);
+
+  return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+         deviceFeature.geometryShader;
+}
+
 VkPhysicalDevice pickPhysicalDevices(VkInstance instance) {
+  VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   uint32_t deviceCount = 0;
 
   vkEnumeratePhysicalDevices(instance, &deviceCount, VK_NULL_HANDLE);
@@ -279,12 +292,49 @@ VkPhysicalDevice pickPhysicalDevices(VkInstance instance) {
 
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices);
 
-  if (devices == VK_NULL_HANDLE) {
-    PANIC("Failed to find a suitable GPU");
+  if (physicalDevice == VK_NULL_HANDLE) {
+    PANIC("failed to find a suitable GPU");
+  }
+
+  VkPhysicalDevice device;
+  uint32_t deviceScore = 0;
+
+  for (uint32_t i = 0; deviceCount > i; i++) {
+    uint32_t score = rateDeviceSuitability(devices[i]);
+    if (score > deviceScore) {
+      deviceScore = score;
+      device = devices[i];
+    }
+  }
+
+  if (device == VK_NULL_HANDLE) {
+    PANIC("failed to find a suitable GPU");
   }
 
   free(devices);
   devices = NULL;
+
+  return device;
+}
+
+int rateDeviceSuitability(VkPhysicalDevice device) {
+  VkPhysicalDeviceProperties deviceProperties;
+  VkPhysicalDeviceFeatures deviceFeature;
+  vkGetPhysicalDeviceProperties(device, &deviceProperties);
+  vkGetPhysicalDeviceFeatures(device, &deviceFeature);
+
+  int score = 0;
+  if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+    score += 1000;
+  }
+
+  score += deviceProperties.limits.maxImageDimension2D;
+
+  if (!deviceFeature.geometryShader) {
+    return 0;
+  }
+
+  return score;
 }
 
 void deleteRequiredExtension(const char **requiredExtension) {
