@@ -134,34 +134,31 @@ VkDebugUtilsMessengerEXT createDebugMessenger(VkInstance instance) {
   return debugMessenger;
 }
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
-                                     VkSurfaceKHR surface) {
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
   QueueFamilyIndices indices;
   uint32_t queueFamilyCount = 0;
 
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
                                            VK_NULL_HANDLE);
-  VkQueueFamilyProperties *queueFamilies = (VkQueueFamilyProperties *)malloc(
-      queueFamilyCount * sizeof(VkQueueFamilyProperties));
+
+  VkQueueFamilyProperties queueFamilies[queueFamilyCount];
 
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
                                            queueFamilies);
 
   for (uint32_t i = 0; i < queueFamilyCount; i++) {
 
-    if ((queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) != 0) {
+    if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
       indices.graphicFamily = i;
+    } else {
+      indices.graphicFamily = 0;
     }
 
-    VkBool32 presentSupport = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-    if (presentSupport) {
-      indices.presentFamily = i;
+    if (isComplete(&indices)) {
+      break;
     }
   }
 
-  free(queueFamilies);
-  queueFamilies = NULL;
   return indices;
 }
 
@@ -203,7 +200,7 @@ VkQueue createGrapichsQueue() { return NULL; }
 VkQueue createPresentQueue(VkDevice device, VkPhysicalDevice physicalDevice,
                            VkSurfaceKHR surface) {
 
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+  QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
   size_t uniqueQueueFamiliesSize = 2;
   uint32_t uniqueQueueFamilies[uniqueQueueFamiliesSize];
@@ -240,41 +237,22 @@ VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window) {
 
 void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device,
                          VkSurfaceKHR surface) {
-  VkQueue graphicQueue;
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
-  VkDeviceQueueCreateInfo queueCreateInfo = {};
-  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queueCreateInfo.queueFamilyIndex = indices.graphicFamily;
-  queueCreateInfo.queueCount = 1;
+
+  QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
   float queuePriority = 1.0f;
-  queueCreateInfo.pQueuePriorities = &queuePriority;
 
-  VkPhysicalDeviceFeatures deviceFeature = {};
-
-  VkDeviceCreateInfo createInfo = {};
-
-  createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  createInfo.pQueueCreateInfos = &queueCreateInfo;
-  createInfo.queueCreateInfoCount = 1;
-  createInfo.pEnabledFeatures = &deviceFeature;
-  createInfo.enabledExtensionCount = 0;
-  createInfo.enabledLayerCount = 0;
-
-  if (vkCreateDevice(physicalDevice, &createInfo, VK_NULL_HANDLE, &device)) {
-    PANIC("Failed to create logical device");
-  }
-  vkGetDeviceQueue(device, indices.graphicFamily, 0, &graphicQueue);
+  VkDeviceQueueCreateInfo queueCreateInfo = {
+      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+      .queueFamilyIndex = indices.graphicFamily,
+      .queueCount = 1,
+      .pQueuePriorities = &queuePriority,
+  };
 }
 
 bool isDeviceSuitable(VkPhysicalDevice device) {
-  VkPhysicalDeviceProperties deviceProperties;
-  VkPhysicalDeviceFeatures deviceFeature;
-  vkGetPhysicalDeviceProperties(device, &deviceProperties);
-  vkGetPhysicalDeviceFeatures(device, &deviceFeature);
-
-  return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-         deviceFeature.geometryShader;
+  QueueFamilyIndices indices = findQueueFamilies(device);
+  return isComplete(&indices);
 }
 
 VkPhysicalDevice pickPhysicalDevices(VkInstance instance) {
@@ -336,6 +314,8 @@ int rateDeviceSuitability(VkPhysicalDevice device) {
 
   return score;
 }
+
+bool isComplete(QueueFamilyIndices *p) { return p->graphicFamily > 0; }
 
 void deleteRequiredExtension(const char **requiredExtension) {
   free(requiredExtension);

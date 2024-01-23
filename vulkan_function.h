@@ -31,6 +31,8 @@ typedef struct QueueFamilyIndices {
   uint32_t presentFamily;
 } QueueFamilyIndices;
 
+bool isComplete(QueueFamilyIndices *p);
+
 bool isDeviceSuitable(VkPhysicalDevice device);
 int rateDeviceSuitability(VkPhysicalDevice device);
 
@@ -52,8 +54,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallBack(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
-                                     VkSurfaceKHR surface);
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device,
                          VkSurfaceKHR surface);
