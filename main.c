@@ -10,8 +10,7 @@ int main() {
   VkInstance vkInstance = createInstance();
   VkSurfaceKHR surface = createSurface(vkInstance, window);
   VkPhysicalDevice physicalDevice = pickPhysicalDevices(vkInstance);
-  VkDevice device = createDevice();
-  createLogicalDevice(physicalDevice, device, surface);
+  VkDevice device = createLogicalDevice(physicalDevice, surface);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();

@@ -33,7 +33,7 @@ typedef struct QueueFamilyIndices {
 
 bool isComplete(QueueFamilyIndices *p);
 
-bool isDeviceSuitable(VkPhysicalDevice device);
+bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
 int rateDeviceSuitability(VkPhysicalDevice device);
 
 VkInstance createInstance();
@@ -54,14 +54,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallBack(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
+                                     VkSurfaceKHR surface);
 
-void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device,
-                         VkSurfaceKHR surface);
+VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice,
+                             VkSurfaceKHR surface);
 
-VkDevice createDevice();
-
-VkQueue createGraphicsQueue();
+VkQueue createGraphicsQueue(VkDevice device, QueueFamilyIndices indices);
 
 VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window);
 
@@ -83,5 +82,7 @@ void deleteVkExtensionProperties(VkExtensionProperties *properties);
 void DestroyDebugUtilsMessengerEXT(VkInstance instance,
                                    const VkAllocationCallbacks *pAllocators,
                                    VkDebugUtilsMessengerEXT pDebugMessenger);
+
+void destroyDevice(VkDevice device);
 
 #endif // !VULKAN_FUNCTION_H

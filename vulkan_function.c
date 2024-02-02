@@ -134,7 +134,8 @@ VkDebugUtilsMessengerEXT createDebugMessenger(VkInstance instance) {
   return debugMessenger;
 }
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
+                                     VkSurfaceKHR surface) {
   QueueFamilyIndices indices;
   uint32_t queueFamilyCount = 0;
 
@@ -152,6 +153,13 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
       indices.graphicFamily = i;
     } else {
       indices.graphicFamily = 0;
+    }
+
+    VkBool32 presentSupport = false;
+    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+    if (presentSupport) {
+      indices.presentFamily = i;
     }
 
     if (isComplete(&indices)) {
@@ -193,14 +201,16 @@ bool checkValidationLayerSupport() {
   return true;
 }
 
-VkDevice createDevice() { return NULL; }
-
-VkQueue createGrapichsQueue() { return NULL; }
+VkQueue createGrapichsQueue(VkDevice device, QueueFamilyIndices indices) {
+  VkQueue graphicsQueue;
+  vkGetDeviceQueue(device, indices.graphicFamily, 0, &graphicsQueue);
+  return graphicsQueue;
+}
 
 VkQueue createPresentQueue(VkDevice device, VkPhysicalDevice physicalDevice,
                            VkSurfaceKHR surface) {
 
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
   size_t uniqueQueueFamiliesSize = 2;
   uint32_t uniqueQueueFamilies[uniqueQueueFamiliesSize];
@@ -235,10 +245,10 @@ VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window) {
   return surface;
 }
 
-void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device,
-                         VkSurfaceKHR surface) {
+VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice,
+                             VkSurfaceKHR surface) {
 
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
   float queuePriority = 1.0f;
 
@@ -248,10 +258,35 @@ void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice device,
       .queueCount = 1,
       .pQueuePriorities = &queuePriority,
   };
+
+  VkPhysicalDeviceFeatures deviceFeatures = {};
+  VkDeviceCreateInfo createInfo = {
+      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+      .pQueueCreateInfos = &queueCreateInfo,
+      .queueCreateInfoCount = 1,
+      .pEnabledFeatures = &deviceFeatures,
+      .enabledExtensionCount = 0,
+  };
+
+  if (enableValidationLayers) {
+    createInfo.enabledLayerCount = validationLayerCount;
+    createInfo.ppEnabledLayerNames = validationLayers;
+  } else {
+    createInfo.enabledLayerCount = 0;
+  }
+
+  VkDevice device;
+
+  if (vkCreateDevice(physicalDevice, &createInfo, VK_NULL_HANDLE, &device) !=
+      VK_SUCCESS) {
+    PANIC("failed to create logical device!");
+  }
+
+  return device;
 }
 
-bool isDeviceSuitable(VkPhysicalDevice device) {
-  QueueFamilyIndices indices = findQueueFamilies(device);
+bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+  QueueFamilyIndices indices = findQueueFamilies(device, surface);
   return isComplete(&indices);
 }
 
@@ -315,7 +350,9 @@ int rateDeviceSuitability(VkPhysicalDevice device) {
   return score;
 }
 
-bool isComplete(QueueFamilyIndices *p) { return p->graphicFamily > 0; }
+bool isComplete(QueueFamilyIndices *p) {
+  return p->graphicFamily > 0 && p->presentFamily > 0;
+}
 
 void deleteRequiredExtension(const char **requiredExtension) {
   free(requiredExtension);
@@ -350,3 +387,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
     func(instance, pDebugMessenger, pAllocators);
   }
 }
+
+void destroyDevice(VkDevice device) {
+  vkDestroyDevice(device, VK_NULL_HANDLE);
+};
