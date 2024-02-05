@@ -2,6 +2,7 @@
 
 const char *validationLayers[] = {"VK_LAYER_KHRONOS_validation"};
 const uint32_t validationLayerCount = 1;
+float queuePriority = 1.0f;
 
 VkInstance createInstance() {
 
@@ -207,19 +208,11 @@ VkQueue createGrapichsQueue(VkDevice device, QueueFamilyIndices indices) {
   return graphicsQueue;
 }
 
-VkQueue createPresentQueue(VkDevice device, VkPhysicalDevice physicalDevice,
-                           VkSurfaceKHR surface) {
-
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
-
-  size_t uniqueQueueFamiliesSize = 2;
-  uint32_t uniqueQueueFamilies[uniqueQueueFamiliesSize];
-  uniqueQueueFamilies[0] = indices.graphicFamily;
-  uniqueQueueFamilies[1] = indices.presentFamily;
-
-  VkDeviceQueueCreateInfo queueCreateInfos[2];
-
-  float queuePriority = 1.0f;
+VkDeviceQueueCreateInfo *
+getDeviceQueueCreateInfo(size_t uniqueQueueFamiliesSize,
+                         uint32_t *uniqueQueueFamilies) {
+  VkDeviceQueueCreateInfo *queueCreateInfos =
+      (VkDeviceQueueCreateInfo *)malloc(sizeof(VkDeviceQueueCreateInfo) * 2);
 
   for (size_t i = 0; i < uniqueQueueFamiliesSize; i++) {
     VkDeviceQueueCreateInfo queueCreateInfo;
@@ -229,7 +222,12 @@ VkQueue createPresentQueue(VkDevice device, VkPhysicalDevice physicalDevice,
     queueCreateInfo.pQueuePriorities = &queuePriority;
     queueCreateInfos[i] = queueCreateInfo;
   }
+  return queueCreateInfos;
+}
 
+VkQueue createPresentQueue(QueueFamilyIndices indices, VkDevice device,
+                           VkPhysicalDevice physicalDevice,
+                           VkSurfaceKHR surface) {
   VkQueue presentQueue;
   vkGetDeviceQueue(device, indices.graphicFamily, 0, &presentQueue);
 
@@ -245,25 +243,23 @@ VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window) {
   return surface;
 }
 
-VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice,
+VkDevice createLogicalDevice(QueueFamilyIndices indices,
+                             VkPhysicalDevice physicalDevice,
                              VkSurfaceKHR surface) {
 
-  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+  size_t uniqueQueueFamiliesSize = 2;
+  uint32_t uniqueQueueFamilies[uniqueQueueFamiliesSize];
+  uniqueQueueFamilies[0] = indices.graphicFamily;
+  uniqueQueueFamilies[1] = indices.presentFamily;
 
-  float queuePriority = 1.0f;
-
-  VkDeviceQueueCreateInfo queueCreateInfo = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .queueFamilyIndex = indices.graphicFamily,
-      .queueCount = 1,
-      .pQueuePriorities = &queuePriority,
-  };
+  VkDeviceQueueCreateInfo *queueCreateInfos =
+      getDeviceQueueCreateInfo(uniqueQueueFamiliesSize, uniqueQueueFamilies);
 
   VkPhysicalDeviceFeatures deviceFeatures = {};
   VkDeviceCreateInfo createInfo = {
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-      .pQueueCreateInfos = &queueCreateInfo,
-      .queueCreateInfoCount = 1,
+      .pQueueCreateInfos = queueCreateInfos,
+      .queueCreateInfoCount = uniqueQueueFamiliesSize,
       .pEnabledFeatures = &deviceFeatures,
       .enabledExtensionCount = 0,
   };
@@ -281,6 +277,9 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice,
       VK_SUCCESS) {
     PANIC("failed to create logical device!");
   }
+
+  free(queueCreateInfos);
+  queueCreateInfos = NULL;
 
   return device;
 }

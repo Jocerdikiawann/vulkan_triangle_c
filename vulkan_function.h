@@ -57,15 +57,17 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallBack(
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
                                      VkSurfaceKHR surface);
 
-VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice,
+VkDevice createLogicalDevice(QueueFamilyIndices indices,
+                             VkPhysicalDevice physicalDevice,
                              VkSurfaceKHR surface);
 
 VkQueue createGraphicsQueue(VkDevice device, QueueFamilyIndices indices);
 
 VkSurfaceKHR createSurface(VkInstance instance, GLFWwindow *window);
 
-VkQueue presentQueue(VkDevice device, VkPhysicalDevice physicalDevice,
-                     VkSurfaceKHR surface);
+VkQueue createPresentQueue(QueueFamilyIndices indices, VkDevice device,
+                           VkPhysicalDevice physicalDevice,
+                           VkSurfaceKHR surface);
 
 bool checkValidationLayerSupport();
 

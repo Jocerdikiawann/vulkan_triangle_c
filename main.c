@@ -8,16 +8,26 @@ int main() {
   glfwInit();
   GLFWwindow *window = createWindow(WIDTH, HEIGHT, "Triangle");
   VkInstance vkInstance = createInstance();
+  VkDebugUtilsMessengerEXT debugMessenger = createDebugMessenger(vkInstance);
   VkSurfaceKHR surface = createSurface(vkInstance, window);
   VkPhysicalDevice physicalDevice = pickPhysicalDevices(vkInstance);
-  VkDevice device = createLogicalDevice(physicalDevice, surface);
+  QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+  VkDevice device = createLogicalDevice(indices, physicalDevice, surface);
+  VkQueue graphicQueue = createGraphicsQueue(device, indices);
+  VkQueue presentQueue =
+      createPresentQueue(indices, device, physicalDevice, surface);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
   }
 
   deleteWindow(window);
+  if (enableValidationLayers) {
+    DestroyDebugUtilsMessengerEXT(vkInstance, VK_NULL_HANDLE, debugMessenger);
+  }
+  destroySurface(vkInstance, surface);
   deleteVkInstance(&vkInstance);
+  destroyDevice(device);
 
   return 0;
   // mat4 matrix;
